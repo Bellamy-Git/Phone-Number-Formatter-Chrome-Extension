@@ -58,19 +58,62 @@ document.body.insertAdjacentHTML('beforeend', modalHTML);
 */
 
 function formatPhoneNumber(phoneNumber) {
-  const phoneRegex = /1?(\d{3})(\d{3})(\d{4})/;
-  return phoneNumber.replace(phoneRegex, function(fullMatch, p1, p2, p3) {
-    // Check if the phone number includes the country code
-    const hasCountryCode = fullMatch.length === 11;
-    return hasCountryCode ? `+1 (${p1}) ${p2}-${p3}` : `(${p1}) ${p2}-${p3}`;
+  //old
+  //const phoneRegex = /1?(\d{3})(\d{3})(\d{4})/;
+  const phoneRegex = /1?(\d{3})(\d{3})(\d{4})|(\d{3})(\d{4})/;
+  return phoneNumber.replace(phoneRegex, function(fullMatch, p1, p2, p3, p4, p5) {
+    if (p4 && p5) {
+      // This is a 7-digit number
+      return `${p4}-${p5}`;
+    } else {
+      // This is a 10/11-digit number
+      const hasCountryCode = fullMatch.length === 11;
+      return hasCountryCode ? `+1 (${p1}) ${p2}-${p3}` : `(${p1}) ${p2}-${p3}`;
+    }
   });
 }
+  //old
+//   return phoneNumber.replace(phoneRegex, function(fullMatch, p1, p2, p3) {
+//     // Check if the phone number includes the country code
+//     const hasCountryCode = fullMatch.length === 11;
+//     return hasCountryCode ? `+1 (${p1}) ${p2}-${p3}` : `(${p1}) ${p2}-${p3}`;
+//   });
+// }
 
-function wrapPhoneNumbers() {
-  const bodyText = document.body.innerHTML;
-  //const phoneRegexGlobal = /\b\d{10}\b/g;
-  const phoneRegexGlobal = /\b1?\d{10}\b/g;
+// function wrapPhoneNumbers() {
+//   const bodyText = document.body.innerHTML;
+//   //const phoneRegexGlobal = /\b\d{10}\b/g;
+//   //old
+//   //const phoneRegexGlobal = /\b1?\d{10}\b/g;
+//   function formatTextNode(node){
+//   const phoneRegexGlobal = /\b1?\d{10}\b|\b\d{7}\b/g;
+//   node.nodeValue = node.nodeValue.replace(phoneRegexGlobal, match => formatPhoneNumber(match)); 
+//   }
 
+
+function walkTheDOM(node, func) {
+  func(node);
+  node = node.firstChild;
+  while (node) {
+    walkTheDOM(node, func);
+    node = node.nextSibling;
+  }
+}
+
+function formatTextNode(node) {
+  const phoneRegexGlobal = /\b1?\d{10}\b|\b\d{7}\b/g;
+  node.nodeValue = node.nodeValue.replace(phoneRegexGlobal, match => formatPhoneNumber(match));
+}
+
+
+
+  function wrapPhoneNumbers() {
+    // Start the DOM traversal from the body of the document
+    walkTheDOM(document.body, function (node) {
+      if (node.nodeType === 3) { // Node.TEXT_NODE
+        formatTextNode(node);
+      }
+    });
   // Replace each phone number with a span that can be clicked
   const formattedText = bodyText.replace(phoneRegexGlobal, function(match) {
     //return `<span class="clickable-phone-number" style="color:blue; cursor:pointer; padding: 2px; border-radius: 2px;">${match}</span>`;
@@ -80,7 +123,7 @@ function wrapPhoneNumbers() {
 
   });
 
-  document.body.innerHTML = formattedText;
+  //document.body.innerHTML = formattedText;
 
   // Add click listeners to each phone number
   document.querySelectorAll('.clickable-phone-number').forEach(function(element) {
