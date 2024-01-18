@@ -1,3 +1,7 @@
+//TO-DO 1/18
+//Update regex to include 7-digit phone numbers
+
+
 /*function formatPhoneNumber(phoneNumber) {
     // Regex to find phone numbers (simplified for this example)
     const phoneRegex = /(\d{3})(\d{3})(\d{4})/;
@@ -72,7 +76,7 @@ function wrapPhoneNumbers() {
     //return `<span class="clickable-phone-number" style="color:blue; cursor:pointer; padding: 2px; border-radius: 2px;">${match}</span>`;
     //return `<span class="clickable-phone-number" style="background=color: #ffff00; text-decoration:underline; cursor:pointer">${match}</span>`;
     //return `<span class="clickable-phone-number" style="background-color: #fffdd0; cursor:pointer; padding: 2px; border-radius: 2px">${match}</span>`;
-    return `<span class="clickable-phone-number" style="cursor:pointer; text-decoration:underline; padding: 2px; border-radius: 2px">${match}</span>`;
+    return `<span class="clickable-phone-number" style="cursor:pointer; text-decoration:underline; padding: 2px; border-radius: 2px" data-original-number="${match}">${match}</span>`;
 
   });
 
@@ -81,13 +85,32 @@ function wrapPhoneNumbers() {
   // Add click listeners to each phone number
   document.querySelectorAll('.clickable-phone-number').forEach(function(element) {
     element.addEventListener('click', function() {
-      const shouldFormat = confirm('Format this phone number?');
-      if (shouldFormat) {
-        element.textContent = formatPhoneNumber(element.textContent);
+      //testing////////
+      //const showFormatAlert = confirm("Format this phone number?");
+      //if (showFormatAlert) {
+      
+    
+      const originalNumber = element.getAttribute('data-original-number');
+      if (element.textContent === originalNumber) {
+        const showFormatAlert = confirm("Format this phone number?");
+        // Format the number
+        element.textContent = formatPhoneNumber(originalNumber);
+      } else {
+        // Revert to the original number
+        const showUnformatAlert = confirm("Would you like to revert this phone number to its original state?");
+        element.textContent = originalNumber;
       }
     });
   });
 }
+      //originalllllll
+//       const shouldFormat = confirm('Format this phone number?');
+//       if (shouldFormat) {
+//         element.textContent = formatPhoneNumber(element.textContent);
+//       }
+//     });
+//   });
+// }
 
 // Run the function to wrap phone numbers
 wrapPhoneNumbers();
