@@ -49,13 +49,6 @@
   //For example: 10 length, or 11 length string, etc.
   
   
-  //backup old
-  /*
-    function formatPhoneNumber(phoneNumber) {
-    const phoneRegex = /(\d{3})(\d{3})(\d{4})/;
-    return phoneNumber.replace(phoneRegex, "($1) $2-$3");
-  } 
-  */
   
   function formatPhoneNumber(phoneNumber) {
     //old
@@ -72,7 +65,55 @@
       }
     });
   }
-    //old
+
+
+  //EXPERIMENTALLLLLL/////;
+
+
+  function processTextNode(node) {
+    const phoneRegexGlobal = /\b1?\d{10}\b|\b\d{7}\b/g;
+    let matches;
+    let lastIndex = 0;
+    let resultHTML = '';
+  
+    while ((matches = phoneRegexGlobal.exec(node.nodeValue)) !== null) {
+      let match = matches[0];
+      resultHTML += node.nodeValue.slice(lastIndex, matches.index);
+      //resultHTML += `<span class="clickable-phone-number" data-original-number="${match}" data-is-formatted="false">${match}</span>`;
+      resultHTML += `<span class="clickable-phone-number" style="cursor:pointer; text-decoration:underline; padding: 2px; border-radius: 2px" data-original-number="${match}">${match}</span>`;
+      lastIndex = matches.index + match.length;
+    }
+    resultHTML += node.nodeValue.slice(lastIndex);
+  
+    if (resultHTML !== node.nodeValue) {
+      let span = document.createElement('span');
+      span.innerHTML = resultHTML;
+      node.parentNode.replaceChild(span, node);
+    }
+}
+
+  function walkTheDOM(node, func) {
+    func(node);
+    node = node.firstChild;
+    while (node) {
+      walkTheDOM(node, func);
+      node = node.nextSibling;
+    }
+  }
+  
+  function formatPhoneNumbersOnPage() {
+    walkTheDOM(document.body, function(node) {
+      if (node.nodeType === 3) { // Node.TEXT_NODE
+        processTextNode(node);
+      }
+    });
+  }
+
+//////////////////////////////////
+
+
+
+//old
   //   return phoneNumber.replace(phoneRegex, function(fullMatch, p1, p2, p3) {
   //     // Check if the phone number includes the country code
   //     const hasCountryCode = fullMatch.length === 11;
@@ -81,22 +122,29 @@
   // }
   
   function wrapPhoneNumbers() {
-    const bodyText = document.body.innerHTML;
-    //const phoneRegexGlobal = /\b\d{10}\b/g;
-    //old
-    //const phoneRegexGlobal = /\b1?\d{10}\b/g;
-    const phoneRegexGlobal = /\b1?\d{10}\b|\b\d{7}\b/g; 
+    document.querySelectorAll('.clickable-phone-number').forEach(function(element) {
+      element.addEventListener('click', function() {
+        const originalNumber = element.getAttribute('data-original-number');
+        const isFormatted = element.getAttribute('data-is-formatted') === 'true';
   
-    // Replace each phone number with a span that can be clicked
-    const formattedText = bodyText.replace(phoneRegexGlobal, function(match) {
-      //return `<span class="clickable-phone-number" style="color:blue; cursor:pointer; padding: 2px; border-radius: 2px;">${match}</span>`;
-      //return `<span class="clickable-phone-number" style="background=color: #ffff00; text-decoration:underline; cursor:pointer">${match}</span>`;
-      //return `<span class="clickable-phone-number" style="background-color: #fffdd0; cursor:pointer; padding: 2px; border-radius: 2px">${match}</span>`;
-      return `<span class="clickable-phone-number" style="cursor:pointer; text-decoration:underline; padding: 2px; border-radius: 2px" data-original-number="${match}">${match}</span>`;
-  
+        if (!isFormatted) {
+          const confirmFormat = confirm("Do you want to format this phone number?");
+          if (confirmFormat) {
+            element.textContent = formatPhoneNumber(originalNumber);
+            element.setAttribute('data-is-formatted', 'true');
+          }
+        } else {
+          const confirmUnformat = confirm("Would you like to revert this phone number to its original state?");
+          if (confirmUnformat) {
+            element.textContent = originalNumber;
+            element.setAttribute('data-is-formatted', 'false');
+          }
+        }
+      });
     });
+}
   
-    document.body.innerHTML = formattedText;
+    //document.body.innerHTML = formattedText;
   
     // Add click listeners to each phone number
     document.querySelectorAll('.clickable-phone-number').forEach(function(element) {
@@ -118,90 +166,16 @@
         }
       });
     });
-  }
-        //originalllllll
-  //       const shouldFormat = confirm('Format this phone number?');
-  //       if (shouldFormat) {
-  //         element.textContent = formatPhoneNumber(element.textContent);
-  //       }
-  //     });
-  //   });
-  // }
-  
-  // Run the function to wrap phone numbers
-  wrapPhoneNumbers();
   
   
-  /* FUNCTIONALITY WITH MODAL BOX
-  // Function to format phone numbers
-  function formatPhoneNumber(phoneNumber) {
-    const phoneRegex = /(\d{3})(\d{3})(\d{4})/;
-    return phoneNumber.replace(phoneRegex, "($1) $2-$3");
-  }
   
-  // Function to wrap phone numbers with clickable spans
-  function wrapPhoneNumbers() {
-    const bodyText = document.body.innerHTML;
-    const phoneRegexGlobal = /\b\d{10}\b/g;
   
-    const formattedText = bodyText.replace(phoneRegexGlobal, function(match) {
-      return `<span class="clickable-phone-number" style="cursor:pointer; text-decoration:underline; padding: 2px; border-radius: 2px">${match}</span>`;
-    });
-  
-    document.body.innerHTML = formattedText;
-  
-    // Add click listeners to each phone number
-    document.querySelectorAll('.clickable-phone-number').forEach(function(element) {
-      element.addEventListener('click', function() {
-        // Open the modal when a phone number is clicked
-        var modal = document.getElementById("phoneNumberModal");
-        var formatButton = document.getElementById("formatButton");
-        modal.style.display = "block";
-  
-        // Format the phone number on button click
-        formatButton.onclick = function() {
-          element.textContent = formatPhoneNumber(element.textContent);
-          modal.style.display = "none";
-        };
-      });
-    });
-  }
-  
-  // Inject CSS for the modal
-  const cssLink = document.createElement('link');
-  cssLink.href = chrome.runtime.getURL('modal.css');
-  cssLink.rel = 'stylesheet';
-  cssLink.type = 'text/css';
-  document.head.appendChild(cssLink);
-  
-  // Inject Modal HTML
-  const modalHTML = `
-  <div id="phoneNumberModal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <p>Do you want to format this phone number?</p>
-      <button id="formatButton">Format</button>
-    </div>
-  </div>
-  `;
-  document.body.insertAdjacentHTML('beforeend', modalHTML);
-  
-  // Close modal when the close button (x) is clicked
-  var span = document.getElementsByClassName("close")[0];
-  span.onclick = function() {
-    var modal = document.getElementById("phoneNumberModal");
-    modal.style.display = "none";
-  }
-  
-  // Close modal when clicking outside of it
-  window.onclick = function(event) {
-    var modal = document.getElementById("phoneNumberModal");
-    if (event.target == modal) {
-      modal.style.display = "none";
-    }
-  }
   
   // Initialize the process to wrap phone numbers
-  wrapPhoneNumbers();
+
+
+
   
-  */  
+
+  formatPhoneNumbersOnPage();
+  wrapPhoneNumbers();
